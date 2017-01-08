@@ -22,50 +22,54 @@
            (map (fn [l c r] (concat [l] c [r])) left matrix right)
            [down])))))
 
-(defn myRoll [r m s]
+(defn roll [r m s countRings]
   (let [rings r
         matrix m
         sizeLine s]
     (let [ring (last rings)]
-      (if (nil? ring)
+      (if (= countRings 0)
         matrix
-        (myRoll
+        (roll
           (drop-last rings)
           (concat
                   [(take sizeLine ring)]
                   (boundLines (drop sizeLine ring) matrix))
 
-          (+ sizeLine 2))))))
+          (+ sizeLine 2)
+          (dec countRings))))))
 
 (defn output [matrix]
   (let [line (first matrix)
         tail (rest matrix)]
-    (println (reduce (fn[s x](str s " " x)) (first line) (rest line)))
+    (println (reduce (fn [s x] (str s " " x)) (first line) (rest line)))
     (if (> (count tail) 0)
       (output tail))))
 
 (output
-  (let [mnr (map #(Integer/parseInt %) (clojure.string/split (read-line) #" "))
-        m (nth mnr 0)
-        n (nth mnr 1)
-        r (nth mnr 2)
+  (let [readArray (fn [] (map #(Integer/parseInt %) (clojure.string/split (read-line) #" ")))
+        mnr (readArray)
+        m (first mnr)
+        n (second mnr)
+        r (last mnr)
         min (if (< n m) n m)
-        countRings (dec (/ (if (odd? min) (dec min) min) 2))
-        a (map #(clojure.string/split (read-line) #" ") (range m))]
+        a (map #(readArray) (range m))]
     (loop [matrix a
-           rings []]
+           rings []
+           countRings (dec (/ (if (odd? min) (dec min) min) 2))]
       (let [up (first matrix)
             down (last matrix)
             cutted (cutSides (drop-last (drop 1 matrix)))
-            left (nth cutted 0)
-            right (nth cutted 1)
-            subMatrix (nth cutted 2)
+            left (first cutted)
+            right (second cutted)
+            subMatrix (last cutted)
             ring (rotate r (concat up right (reverse down) (reverse left)))]
-        (if (= (count rings) countRings)
-          (myRoll
+        (if (= countRings 0)
+          (roll
             (conj rings ring)
             (map (fn [i] (vector)) (range (if (> m n) (- m n) 0)))
-            (count up))
+            (count up)
+            countRings)
           (recur
             subMatrix
-            (conj rings ring)))))))
+            (conj rings ring)
+            (dec countRings)))))))
